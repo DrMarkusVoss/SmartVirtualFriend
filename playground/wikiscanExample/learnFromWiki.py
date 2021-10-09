@@ -16,7 +16,10 @@ tokens = [t for t in text.split()]
 
 # process
 setofstopwords = set(stopwords.words('english'))
-setofwords = set(words.words("en-basic"))
+# basic set of words
+#setofwords = set(words.words("en-basic"))
+# full set of words
+setofwords = set(words.words())
 clean_tokens = tokens[:]
 for token in tokens:
     if token in setofstopwords:

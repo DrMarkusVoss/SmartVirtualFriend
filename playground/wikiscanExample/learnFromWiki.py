@@ -1,11 +1,12 @@
 import urllib.request
 from bs4 import BeautifulSoup
-from nltk.corpus import stopwords, words
+from nltk.corpus import stopwords, words, names
+import nltk.corpus
 import nltk
 
 # read webcontent
-wikidog = urllib.request.urlopen('https://en.wikipedia.org/wiki/Dog')
-#wikidog = urllib.request.urlopen('https://en.wikipedia.org/wiki/Winston_Churchill')
+#wikidog = urllib.request.urlopen('https://en.wikipedia.org/wiki/Dog')
+wikidog = urllib.request.urlopen('https://en.wikipedia.org/wiki/Winston_Churchill')
 html = wikidog.read()
 
 # extract text
@@ -20,6 +21,7 @@ setofstopwords = set(stopwords.words('english'))
 #setofwords = set(words.words("en-basic"))
 # full set of words
 setofwords = set(words.words())
+setofnames = set(names.words())
 clean_tokens = tokens[:]
 for token in tokens:
     if token in setofstopwords:
@@ -29,7 +31,8 @@ for token in tokens:
         isword = True
         #print("check: " + token)
         isword = token in setofwords
-        if not isword:
+        isname = token in setofnames
+        if (not isword) and (not isname):
             clean_tokens.remove(token)
 
 freq = nltk.FreqDist(clean_tokens)

@@ -1,12 +1,13 @@
 import urllib.request
 from bs4 import BeautifulSoup
 from nltk.corpus import stopwords, words, names
-import nltk.corpus
+from nltk.stem import WordNetLemmatizer
 import nltk
 
 # read webcontent
 #wikidog = urllib.request.urlopen('https://en.wikipedia.org/wiki/Dog')
-wikidog = urllib.request.urlopen('https://en.wikipedia.org/wiki/Winston_Churchill')
+wikidog = urllib.request.urlopen('https://en.wikipedia.org/wiki/Metallica')
+#wikidog = urllib.request.urlopen('https://en.wikipedia.org/wiki/Winston_Churchill')
 html = wikidog.read()
 
 # extract text
@@ -23,6 +24,9 @@ setofstopwords = set(stopwords.words('english'))
 setofwords = set(words.words())
 setofnames = set(names.words())
 clean_tokens = tokens[:]
+lemmatizer = WordNetLemmatizer()
+
+# filter out stop words and rubbish
 for token in tokens:
     if token in setofstopwords:
         clean_tokens.remove(token)
@@ -35,7 +39,13 @@ for token in tokens:
         if (not isword) and (not isname):
             clean_tokens.remove(token)
 
-freq = nltk.FreqDist(clean_tokens)
+# lemmatize
+newtokenlist = []
+for token in clean_tokens:
+    new_token = lemmatizer.lemmatize(token)
+    newtokenlist.append(new_token)
+
+freq = nltk.FreqDist(newtokenlist)
 for key, val in freq.items():
     print(str(key) + ':' + str(val))
 freq.plot(20, cumulative=False)

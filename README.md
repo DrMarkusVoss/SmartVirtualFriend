@@ -21,6 +21,7 @@ pip install the following:
 - html5lib
 - matplotlib
 - nltk
+- word2number
 
 Then open the Python console and do:
 ```

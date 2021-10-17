@@ -150,7 +150,7 @@ def leavesToString(leaves):
 
 
 def nltk_regex_parse(sentence):
-  """pare a given sentence with a simple RSS regex parser. Result will be added
+  """parse a given sentence with a simple RSS regex parser. Result will be added
      to the global knowledge base 'kdb', which is a python dictionary."""
   #   PP: {<IN><NP>}                    # Chunk prepositions followed by NP
   #   CLAUSE: {<NP><VP>}                # Chunk NP, VP

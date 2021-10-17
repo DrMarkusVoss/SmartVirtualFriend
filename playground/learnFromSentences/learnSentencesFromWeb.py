@@ -1,3 +1,6 @@
+import urllib.request
+from bs4 import BeautifulSoup
+from nltk.corpus import stopwords, words, names
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.stem import WordNetLemmatizer
 import nltk
@@ -8,7 +11,7 @@ kdb = {"things": {}}
 
 lemmatizer = WordNetLemmatizer()
 
-aggregates_words = ("has", "have", "consists of", "consist of", "made of", "owns", "own", "characterized by")
+aggregates_words = ("has", "have", "consists of", "made of")
 
 generalizes_words = ("is", "are")
 
@@ -51,7 +54,7 @@ def getNNString(nn_term):
       # I will store words only in their singular form
       res.append(lemmatizer.lemmatize(e[0].lower()))
     elif e[1] == "NNP":
-      res.append(e[0])
+      res.append(e[0].lower())
     elif e[1] == "CD":
       num = 0
       if e[0].isdecimal():
@@ -113,21 +116,14 @@ def addToKDB(subj, pred, obj):
         apdstr = [ncd, nso]
         kdb["things"][nss]["aggregates"].append(apdstr)
     else:
-      if not "aggregates" in kdb["things"][nss]:
+      if not nso in kdb["things"][nss]["aggregates"]:
         if ncd == "":
-          kdb["things"][nss]["aggregates"] = [nso]
+          kdb["things"][nss]["aggregates"].append(nso)
         else:
           apdstr = [ncd, nso]
-          kdb["things"][nss]["aggregates"] = [apdstr]
+          kdb["things"][nss]["aggregates"].append(apdstr)
       else:
-        if not nso in kdb["things"][nss]["aggregates"]:
-          if ncd == "":
-            kdb["things"][nss]["aggregates"].append(nso)
-          else:
-            apdstr = [ncd, nso]
-            kdb["things"][nss]["aggregates"].append(apdstr)
-        else:
-          print("==> I already know that...\n")
+        print("==> I already know that...\n")
 
     if not nso in kdb["things"]:
       kdb["things"][nso] = {"is part of": [nss]}
@@ -201,37 +197,17 @@ def learnFromSentence(sentence):
   nltk_regex_parse(sent_pos_tags)
 
 
-sentences = ["The dog or domestic dog (Canis familiaris) is a domesticated descendant of the grey wolf, characterized by an upturning tail.",
-             "A car has four wheels.",
-             "A car has a steering.",
-             "Dogs are animals.",
-             "A dog is an animal.",
-             "A dog is a pet",
-             "A horse is an animal.",
-             "A dog strays down the street slowly.",
-             "A car is a vehicle.",
-             "Trucks are vehicles.",
-             "Bicycles are vehicles.",
-             "A Cessna is a plane.",
-             "A duo consists of two persons",
-             "A trio consists of three persons.",
-             "A bread is made of wheat flour.",
-             "A bread is made of salt.",
-             "Humans consist of water.",
-             "Humans have blood.",
-             "A human has a head.",
-             "A human has 2 legs.",
-             "Humans have two arms.",
-             "A human head has two eyes.",
-             "Human heads have two ears.",
-             "The car has a manual transmission.",
-             "The dog is characterized by an upturning tail."]
-
+wikidog = urllib.request.urlopen('https://en.wikipedia.org/wiki/Dog')
+html = wikidog.read()
+# extract text
+soup = BeautifulSoup(html,'html5lib')
+text = soup.get_text(strip = True)
+sentences = sent_tokenize(text)
+#print(sentences)
 for s in sentences:
   learnFromSentence(s)
 
 print("learned knowledge base:")
 print(kdb)
-
-#nltk.help.upenn_tagset()
+#tokens = [t for t in text.split()]
 

@@ -25,6 +25,7 @@ def getNNString(nn_term):
     if e[1] == "NN":
       res = e[0].lower()
     elif e[1] == "NNS":
+      # I will store words only in their singular form
       res = lemmatizer.lemmatize(e[0].lower())
     elif e[1] == "NNP":
       res = e[0]
@@ -52,15 +53,30 @@ def addToKDB(subj, pred, obj):
       obj_dict = {nso: {"generalizes": [nss]}}
       kdb["things"][nso] = {"generalizes": [nss]}
       print("==> added that to my knowledge base: ", obj_dict)
-      #print()
     else:
-      if not nss in kdb["things"][nso]["generalizes"]:
-        obj_dict = {nso: {"generalizes": [nss]}}
-        kdb["things"][nso]["generalizes"].append(nss)
-        print("==> added that to my knowledge base: ", obj_dict)
-        #print()
+      if not "generalizes" in kdb["things"][nso]:
+        kdb["things"][nso] = {"generalizes": [nss]}
       else:
-        print("==> I already know that...\n")
+        if not nss in kdb["things"][nso]["generalizes"]:
+          obj_dict = {nso: {"generalizes": [nss]}}
+          kdb["things"][nso]["generalizes"].append(nss)
+          print("==> added that to my knowledge base: ", obj_dict)
+          #print()
+        else:
+          print("==> I already know that...\n")
+
+    if not nss in kdb["things"]:
+      kdb["things"][nss] = {"specializes": [nso]}
+    else:
+      if not "specializes" in kdb["things"][nss]:
+        kdb["things"][nss]["specializes"] = [nso]
+      else:
+
+        if not nso in kdb["things"][nss]["specializes"]:
+          kdb["things"][nss]["specializes"].append(nso)
+        else:
+          print("==> I already know that...\n")
+
   elif p == "has" or p == "have":
     nss, _ = getNNString(subj)
     nso, ncd = getNNString(obj)
@@ -83,7 +99,6 @@ def addToKDB(subj, pred, obj):
         print("==> I already know that...\n")
 
 
-
 def leavesToString(leaves):
   """Return the leaves as concatenated string with whitespace separation."""
   retstr = ""
@@ -98,9 +113,9 @@ def nltk_regex_parse(sentence):
   #   CLAUSE: {<NP><VP>}                # Chunk NP, VP
   #  VP: {<VB.*><NP|PP|CLAUSE|CD>+$}   # Chunk verbs and their arguments
   grammar = r"""
-  NP: {<DT|JJ|CD|NN.*>+}            # Chunk sequences of DT, JJ, NN
-  VERB: {<RB>*<VB.*><RP>*}
-  RSS: {<NP><VERB><NP>}             # A really simple sentence with <subject> <predicate> <object>
+  NP: {<DT|JJ|CD|NN.*>+}            # Noun Phrase, chunk sequences of DT, JJ, NN
+  VERB: {<RB>*<VB.*><RP>*}          # verb with possible prepositions
+  RSS: {<NP><VERB><NP>}             # A really simple sentence (RSS) with <subject> <predicate> <object>
   """
   cp = nltk.RegexpParser(grammar)
 
@@ -108,12 +123,17 @@ def nltk_regex_parse(sentence):
   print('parsed_sentence=', parsed_sentence)
 
   result = None
+
+  # find a "real simple sentence" (RSS rule in grammar)
   for s in parsed_sentence.subtrees(lambda parsed_sentence: parsed_sentence.label() == "RSS"):
     result = s
 
+  # make sure that it is a RSS
   if not result == None:
     print("Result = ", result)
 
+    # popping the tree element gets the items
+    # in reverse order
     obj = result.pop()
     pred = result.pop()
     subj = result.pop()

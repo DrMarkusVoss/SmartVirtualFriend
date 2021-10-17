@@ -8,6 +8,28 @@ kdb = {"things": {}}
 
 lemmatizer = WordNetLemmatizer()
 
+aggregates_words = ("has", "have", "consists of", "made of")
+
+generalizes_words = ("is", "are")
+
+def isAggregatesVerb(verb_phrase):
+  """heuristic to check whether the phrase has the semantics of aggregation."""
+  verb = leavesToString(verb_phrase).strip()
+  if ("is " in verb) and (verb_phrase.__len__() > 1):
+    verb = verb.replace("is", "").strip()
+
+  if verb in aggregates_words:
+    return True
+  else:
+    return False
+
+def isGeneralizesVerb(verb_phrase):
+  """heuristic to check whether the phrase has the semantics of generalization."""
+  if (verb_phrase.__len__() == 1) and (getVBZString(verb_phrase) in generalizes_words):
+    return True
+  else:
+    return False
+
 def getVBZString(verb_term):
   """Return the verb word."""
   res = ""
@@ -44,9 +66,7 @@ def addToKDB(subj, pred, obj):
 
   global kdb
 
-  p = getVBZString(pred)
-
-  if p == "is" or p == "are":
+  if isGeneralizesVerb(pred):
     nso, _ = getNNString(obj)
     nss, _ = getNNString(subj)
     if not nso in kdb["things"]:
@@ -71,33 +91,42 @@ def addToKDB(subj, pred, obj):
       if not "specializes" in kdb["things"][nss]:
         kdb["things"][nss]["specializes"] = [nso]
       else:
-
         if not nso in kdb["things"][nss]["specializes"]:
           kdb["things"][nss]["specializes"].append(nso)
         else:
           print("==> I already know that...\n")
 
-  elif p == "has" or p == "have":
+  elif isAggregatesVerb(pred):
     nss, _ = getNNString(subj)
     nso, ncd = getNNString(obj)
     if not nss in kdb["things"]:
       apdstr = []
-      kdb["things"][nss] = {"has": []}
+      kdb["things"][nss] = {"aggregates": []}
       if ncd == "":
-        kdb["things"][nss]["has"].append(nso)
+        kdb["things"][nss]["aggregates"].append(nso)
       else:
         apdstr = [ncd, nso]
-        kdb["things"][nss]["has"].append(apdstr)
+        kdb["things"][nss]["aggregates"].append(apdstr)
     else:
-      if not nso in kdb["things"][nss]["has"]:
+      if not nso in kdb["things"][nss]["aggregates"]:
         if ncd == "":
-          kdb["things"][nss]["has"].append(nso)
+          kdb["things"][nss]["aggregates"].append(nso)
         else:
           apdstr = [ncd, nso]
-          kdb["things"][nss]["has"].append(apdstr)
+          kdb["things"][nss]["aggregates"].append(apdstr)
       else:
         print("==> I already know that...\n")
 
+    if not nso in kdb["things"]:
+      kdb["things"][nso] = {"is part of": [nss]}
+    else:
+      if not "is part of" in kdb["things"][nso]:
+        kdb["things"][nso]["is part of"] = [nss]
+      else:
+        if not nss in kdb["things"][nso]["is part of"]:
+          kdb["things"][nso]["is part of"].append(nss)
+        else:
+          print("==> I already know that...\n")
 
 def leavesToString(leaves):
   """Return the leaves as concatenated string with whitespace separation."""
@@ -114,7 +143,7 @@ def nltk_regex_parse(sentence):
   #  VP: {<VB.*><NP|PP|CLAUSE|CD>+$}   # Chunk verbs and their arguments
   grammar = r"""
   NP: {<DT|JJ|CD|NN.*>+}            # Noun Phrase, chunk sequences of DT, JJ, NN
-  VERB: {<RB>*<VB.*><RP>*}          # verb with possible prepositions
+  VERB: {<RB>*<VB.*>*<RP>*<IN>*}          # verb with possible prepositions
   RSS: {<NP><VERB><NP>}             # A really simple sentence (RSS) with <subject> <predicate> <object>
   """
   cp = nltk.RegexpParser(grammar)
@@ -171,7 +200,9 @@ sentences = ["The dog or domestic dog (Canis familiaris) is a domesticated desce
              "A car is a vehicle.",
              "Trucks are vehicles.",
              "Bicycles are vehicles.",
-             "A Cessna is a plane."]
+             "A Cessna is a plane.",
+             "A duo consists of two persons",
+             "Bread is made of flour."]
 
 for s in sentences:
   learnFromSentence(s)

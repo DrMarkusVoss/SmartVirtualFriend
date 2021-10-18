@@ -80,7 +80,7 @@ def addToKDB(subj, pred, obj):
       print("==> added that to my knowledge base: ", obj_dict)
     else:
       if not "generalizes" in kdb["things"][nso]:
-        kdb["things"][nso] = {"generalizes": [nss]}
+        kdb["things"][nso]["generalizes"]=[nss]
       else:
         if not nss in kdb["things"][nso]["generalizes"]:
           obj_dict = {nso: {"generalizes": [nss]}}
@@ -225,7 +225,13 @@ sentences = ["The dog or domestic dog (Canis familiaris) is a domesticated desce
              "A human head has two eyes.",
              "Human heads have two ears.",
              "The car has a manual transmission.",
-             "The dog is characterized by an upturning tail."]
+             "The dog is characterized by an upturning tail.",
+             "Arms are extremities.",
+             "Legs are extremities.",
+             "Persons are humans.",
+             "A human is a lifeform.",
+             "A man is a person.",
+             "A woman is a person."]
 
 for s in sentences:
   learnFromSentence(s)

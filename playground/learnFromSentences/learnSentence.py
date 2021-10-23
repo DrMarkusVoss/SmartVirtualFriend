@@ -304,3 +304,9 @@ print(searchLeaf("man", "leg"))
 print("Does a man have an arm?")
 print(searchLeaf("man", "arm"))
 
+print("Does a man have an ear?")
+print(searchLeaf("man", "ear"))
+
+print("Does a man have a wheel?")
+print(searchLeaf("man", "wheel"))
+

@@ -12,6 +12,8 @@ aggregates_words = ("has", "have", "consists of", "consist of", "made of", "owns
 
 generalizes_words = ("is", "are")
 
+resultlist = []
+
 def isAggregatesVerb(verb_phrase):
   """heuristic to check whether the phrase has the semantics of aggregation."""
   verb = leavesToString(verb_phrase).strip()
@@ -194,6 +196,53 @@ def nltk_regex_parse(sentence):
   else:
     print("No RSS sentence!\n")
 
+def searchLeaf(start, leaf):
+  """First version of recursive search
+     considering 'aggregates' and 'specializes'
+     relations to find out whether an element 'leaf'
+     is part of an element 'start'."""
+  treepath = ""
+  ret = False
+
+  if start == leaf:
+    ret = True
+    return ret, treepath + leaf + "; "
+
+  if start in kdb["things"]:
+    for e in kdb["things"][start]:
+      if (e == leaf):
+        ret = True
+        return ret, treepath + leaf + "; "
+      else:
+        if e == "specializes":
+          for i in kdb["things"][start]["specializes"]:
+            succ, adder = searchLeaf(i, leaf)
+            if succ:
+              ret = True
+              treepath = start + "->" + adder
+              resultlist.append(treepath)
+
+        if e == "aggregates":
+          for j in kdb["things"][start]["aggregates"]:
+            if isinstance(j, list):
+              #print("list = ", j)
+              #treepath = treepath + "["
+              for l in j:
+                succ, adder = searchLeaf(l, leaf)
+                if succ:
+                  ret = True
+                  treepath = start + "-*" + adder
+                  resultlist.append(treepath)
+              #treepath = treepath + "]"
+            else:
+              succ, adder = searchLeaf(j, leaf)
+              if succ:
+                ret = True
+                treepath = start + "-*" + adder
+                resultlist.append(treepath)
+
+  return ret, treepath
+
 def learnFromSentence(sentence):
   """process a given sentence with a learning processing chain."""
   sent_tokens = word_tokenize(sentence)
@@ -231,7 +280,8 @@ sentences = ["The dog or domestic dog (Canis familiaris) is a domesticated desce
              "Persons are humans.",
              "A human is a lifeform.",
              "A man is a person.",
-             "A woman is a person."]
+             "A woman is a person.",
+             "A dog has 4 legs."]
 
 for s in sentences:
   learnFromSentence(s)
@@ -240,4 +290,11 @@ print("learned knowledge base:")
 print(kdb)
 
 #nltk.help.upenn_tagset()
+
+print(searchLeaf("woman", "eye"))
+
+print(searchLeaf("man", "extremity"))
+#print(resultlist)
+print(searchLeaf("man", "leg"))
+print(searchLeaf("man", "arm"))
 

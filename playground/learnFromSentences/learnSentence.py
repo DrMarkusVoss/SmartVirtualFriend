@@ -291,10 +291,16 @@ print(kdb)
 
 #nltk.help.upenn_tagset()
 
+# does a woman have an eye?
 print(searchLeaf("woman", "eye"))
 
+# does a man have an extremity?
 print(searchLeaf("man", "extremity"))
 #print(resultlist)
+
+# does a man have a leg?
 print(searchLeaf("man", "leg"))
+
+# does a man have an arm?
 print(searchLeaf("man", "arm"))
 
